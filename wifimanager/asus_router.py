@@ -2,6 +2,9 @@ import requests
 import os
 import base64
 import logging
+import urllib.parse
+import re
+
 
 logger = logging.getLogger(__name__)
 
@@ -16,6 +19,7 @@ except KeyError as e:
 
 
 class AsusApi:
+
     HOST = 'http://192.168.1.1/'
 
     def __init__(self, username=None, password=None):
@@ -25,28 +29,56 @@ class AsusApi:
 
     def login(self):
         """Logs in to the router using either conf.settings or env variables"""
-        url = f'{self.HOST}login.cgi'
+        url = self._get_url('login.cgi')
         headers = {
             'Referer': 'http://192.168.1.1/Main_Login.asp',
         }
-        data= {
+        data = {
             'login_authorization': self.get_credentials_b64_encoded()
         }
         req = requests.post(url, headers=headers, data=data)
         token_cookie_str = req.headers.get('Set-Cookie')
         self.asus_token = AsusToken.from_cookie_str(token_cookie_str)
         if not self.asus_token:
-            logger.warning('Login failed')
+            logger.info('Login failed')
 
     def get_client_connections_status(self):
-        url = f'{self.HOST}Main_WStatus_Content.asp'
+        url = self._get_url('Main_WStatus_Content.asp')
 
-    def get_update_clients(self):
-        url = f'{self.HOST}update_clients.asp'
+    def get_connected_clients(self):
+        url = self._get_url('update_clients.asp')
+        headers = {
+            'Referer': 'http://192.168.1.1/Main_Login.asp',
+        }
+        res = requests.get(url, headers=headers)
+        return self.parse_clients(res.content.decode('utf-8'))
+
+    def block_client(self, clients):
+        url = self._get_url('start_apply2.htm')
+
+    def parse_clients(self, raw_clients_js):
+        """
+        Parses raw_clients_js blob wich is javascript
+        :param raw_clients_js: client information in the form of raw javascript code
+        :return: a list of Client objects
+        """
+        blocked_macs = []
+
+        clients_unquoted = urllib.parse.unquote(raw_clients_js)
+        for line in clients_unquoted.splitlines():
+            if line.startswith('time_scheduling_mac'):
+                print(line)
+                macs_match = re.search(r"\('(?P<macs>[A-Z1-9:>]+)'\)", line)
+                blocked_macs = macs_match.group('macs').split('>')
+                print(blocked_macs)
+                print('parse_clients')
 
     def get_credentials_b64_encoded(self):
         credentials_formatted = f'{self.username}:{self.password}'
         return base64.b64encode(credentials_formatted.encode('utf-8'))
+
+    def _get_url(self, path):
+        return f'{self.HOST}{path}'
 
     def __str__(self):
         return str(self.asus_token)
@@ -102,14 +134,23 @@ class AsusToken:
         return other + self.token
 
 
-class Device:
-    """Used to represent a device connected to the router"""
-    pass
+class Client:
+    """Used to represent a client connected to the router"""
+    def __init__(self, name, mac_addr, ip_addr, is_blocked):
+        self.name = name
+        self.mac_addr = mac_addr
+        self.ip_addr = ip_addr
+        self.is_blocked = is_blocked
+
+    def __str__(self):
+        return f'{self.name} (mac={self.mac_addr}  ip={self.ip_addr} blocked={self.is_blocked})'
 
 if __name__ == '__main__':
-    api = AsusApi('bob', 'brown')
+    # api = AsusApi('bob', 'brown')
     # print(f'before: {api}')
     # api.login()
     # print(f'after: {api}')
-    print(api.get_credentials_b64_encoded())
+    api = AsusApi()
+    clients_raw = api.get_connected_clients()
+    # print(clients_raw)
 

@@ -1,5 +1,7 @@
 from django.test import SimpleTestCase
+
 import os
+from unittest.mock import Mock, patch
 
 from .asus_router import AsusApi, AsusToken
 
@@ -100,14 +102,17 @@ class TestAsusApi(SimpleTestCase):
         self.assertEqual(api.username, 'boy')
         self.assertEqual(api.password, 'george')
 
-    def test_login_invalid_credentials(self):
+    @patch('requests.post')
+    def test_login_invalid_credentials(self, mock_post):
+        mock_post.return_value.headers = {'Set-Cookie': ''}
         api = AsusApi('boy', 'george123')
         api.login()
         self.assertEqual(api.asus_token, '')
 
-    def test_login_valid_credentials(self):
+    @patch('requests.post')
+    def test_login_valid_credentials(self, mock_post):
         """Requires that valid credentials are set either in config or env"""
+        mock_post.return_value.headers = {'Set-Cookie': 'asus_token=1070711480134875637378320976216; HttpOnly;'}
         api = AsusApi()
-        api.asus_token = ''
         api.login()
-        self.assertNotEqual(api.asus_token, '')
+        self.assertEqual(api.asus_token, '1070711480134875637378320976216')
