@@ -32,13 +32,10 @@ class AsusApi:
     def login(self):
         """Logs in to the router using either conf.settings or env variables"""
         url = self._get_url('login.cgi')
-        headers = {
-            'Referer': 'http://192.168.1.1/Main_Login.asp',
-        }
         data = {
             'login_authorization': self.get_credentials_b64_encoded()
         }
-        req = requests.post(url, headers=headers, data=data)
+        req = requests.post(url, headers=self._get_headers(), data=data)
         token_cookie_str = req.headers.get('Set-Cookie')
         self.asus_token = AsusToken.from_cookie_str(token_cookie_str)
         if not self.asus_token:
@@ -46,23 +43,59 @@ class AsusApi:
 
     def get_client_connection_statuses(self):
         url = self._get_url('Main_WStatus_Content.asp')
-        headers = {
-            'Referer': 'http://192.168.1.1/Main_Login.asp',
-            'Cookie': f'asus_token={self.asus_token}'
-        }
-        res = requests.get(url, headers=headers)
+        res = requests.get(url, headers=self._get_headers())
         return self.parse_client_connection_html(res.content.decode('utf-8'))
 
     def get_connected_clients(self):
         url = self._get_url('update_clients.asp')
-        headers = {
-            'Referer': 'http://192.168.1.1/Main_Login.asp',
-        }
-        res = requests.get(url, headers=headers)
+        res = requests.get(url, headers=self._get_headers())
         return self.parse_clients(res.content.decode('utf-8'))
 
-    def block_client(self, clients):
+    def block_clients(self, client_macs):
+        """
+        When blocking clients you must send new client macs to block as well as the macs of clients already blocked.
+        The router will unblock and clients not in client_macs.
+        :param client_macs - the mac addresses of clients to block. Must include macs already blocked if you want them
+                             to continue being blocked.
+        """
         url = self._get_url('start_apply2.htm')
+        res = requests.post(url, headers=self._get_headers(), data=self.build_block_clients_data(client_macs))
+        return res.content.decode('utf-8')
+
+    def unblock_all_clients(self):
+        return self.block_clients([])
+
+    @classmethod
+    def build_block_clients_data(cls, client_macs):
+        data = {
+            "MULTIFILTER_ALL": "1",
+            'MULTIFILTER_DEVICENAME': "",
+            "MULTIFILTER_ENABLE": "",
+            "MULTIFILTER_MAC": "",
+            "MULTIFILTER_MACFILTER_DAYTIME": "",
+            "action_mode": "apply",
+            "action_script": "restart_firewall",
+            "action_wait": "5",
+            "current_page": "index.asp",
+            "custom_clientlist": "",
+            "flag": "",
+            "modified": "0",
+            "next_page": "index.asp"
+        }
+        client_list_template = '<boogie>{mac}>0>0>>'
+        for i, mac in enumerate(client_macs):
+            if i == 0:
+                data['MULTIFILTER_MACFILTER_DAYTIME'] += '<'
+            else:
+                data['MULTIFILTER_MACFILTER_DAYTIME'] += '><'
+                data['MULTIFILTER_MAC'] += '>'
+                data['MULTIFILTER_ENABLE'] += '>'
+                data['MULTIFILTER_DEVICENAME'] += '>'
+            data['MULTIFILTER_DEVICENAME'] += 'boogie'
+            data['MULTIFILTER_ENABLE'] += '1'
+            data['MULTIFILTER_MAC'] += mac
+            data['custom_clientlist'] += client_list_template.format(mac=mac)
+        return data
 
     @classmethod
     def parse_client_connection_html(cls, connections_html):
@@ -126,6 +159,13 @@ class AsusApi:
 
     def _get_url(self, path):
         return f'{self.HOST}{path}'
+
+    def _get_headers(self):
+        headers = {
+            'Referer': 'http://192.168.1.1/Main_Login.asp',
+            'Cookie': f'asus_token={self.asus_token}'
+        }
+        return headers
 
     def __str__(self):
         return str(self.asus_token)
@@ -237,13 +277,13 @@ class Client:
 
 if __name__ == '__main__':
     asus = AsusApi()
-    # connected_clients = asus.get_connected_clients()
-    # print('blocked:', [blocked_client for blocked_client in connected_clients if blocked_client.is_blocked])
-    # for client in connected_clients:
-    #     print(client)
-    asus.login()
-    connections_info = asus.get_client_connection_statuses()
-    print(connections_info)
-    # for status in connections_info:
-    #     print(status)
+
+    # asus.login()
+    asus.block_clients(['FC:C2:DE:53:BA:96'])
+    # asus.unblock_all_clients()
+    # print(asus.build_block_clients_data())
+    connected_clients = asus.get_connected_clients()
+    print('blocked:', [blocked_client for blocked_client in connected_clients if blocked_client.is_blocked])
+    for client in connected_clients:
+        print(client)
 

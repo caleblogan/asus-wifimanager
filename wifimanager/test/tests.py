@@ -204,4 +204,30 @@ class TestAsusApi(SimpleTestCase):
         client_statuses = api.get_client_connection_statuses()
         self.assertListEqual(client_statuses, [])
 
+    def test_build_block_clientlist_str_no_clients(self):
+        api = AsusApi()
+        data = api.build_block_clients_data([])
+        self.assertEqual(data['MULTIFILTER_DEVICENAME'], '')
+        self.assertEqual(data['MULTIFILTER_ENABLE'], '')
+        self.assertEqual(data['MULTIFILTER_MAC'], '')
+        self.assertEqual(data['MULTIFILTER_MACFILTER_DAYTIME'], '')
+        self.assertEqual(data['custom_clientlist'], '')
+
+    def test_build_block_clientlist_str_1_client(self):
+        api = AsusApi()
+        data = api.build_block_clients_data(['FC:C2:DE:53:BA:96'])
+        self.assertEqual(data['MULTIFILTER_DEVICENAME'], 'boogie')
+        self.assertEqual(data['MULTIFILTER_ENABLE'], '1')
+        self.assertEqual(data['MULTIFILTER_MAC'], 'FC:C2:DE:53:BA:96')
+        self.assertEqual(data['MULTIFILTER_MACFILTER_DAYTIME'], '<')
+        self.assertEqual(data['custom_clientlist'], '<boogie>FC:C2:DE:53:BA:96>0>0>>')
+
+    def test_build_block_clientlist_str_3_client(self):
+        api = AsusApi()
+        data = api.build_block_clients_data(['FC:C2:DE:53:BA:96', 'AC:63:BE:B6:74:36', '68:37:E9:1D:A7:CE'])
+        self.assertEqual(data['MULTIFILTER_DEVICENAME'], 'boogie>boogie>boogie')
+        self.assertEqual(data['MULTIFILTER_ENABLE'], '1>1>1')
+        self.assertEqual(data['MULTIFILTER_MAC'], 'FC:C2:DE:53:BA:96>AC:63:BE:B6:74:36>68:37:E9:1D:A7:CE')
+        self.assertEqual(data['MULTIFILTER_MACFILTER_DAYTIME'], '<><><')
+        self.assertEqual(data['custom_clientlist'], '<boogie>FC:C2:DE:53:BA:96>0>0>><boogie>AC:63:BE:B6:74:36>0>0>><boogie>68:37:E9:1D:A7:CE>0>0>>')
 
