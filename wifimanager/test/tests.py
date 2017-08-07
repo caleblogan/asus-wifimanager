@@ -3,7 +3,7 @@ from django.test import SimpleTestCase
 import os
 from unittest.mock import Mock, patch
 
-from ..asus_router import AsusApi, AsusToken, Client
+from ..asus_router import AsusApi, AsusToken, Client, ClientConnectionSample
 
 
 class TestAsusToken(SimpleTestCase):
@@ -180,4 +180,28 @@ class TestAsusApi(SimpleTestCase):
             Client('amazon-b1f569309', 'AC:63:BE:B6:74:36', '192.168.1.235', False)
         ]
         self.assertListEqual(clients, expected)
+
+    @patch('requests.get')
+    def test_get_client_connection_statuses_multiple_clients(self, mock_get):
+        with open('wifimanager/test/test_res/client_connection_statuses.html', 'rb') as fh:
+            html_content = fh.read()
+        mock_get.return_value.content = html_content
+        api = AsusApi()
+        expected = [
+            ClientConnectionSample('34:DE:1A:01:A1:E9', '-60dBm', '121.5M', '6.5M', '00:01:42'),
+            ClientConnectionSample('DC:0B:34:97:C8:69', '-69dBm', '26M', '6.5M', '00:06:00'),
+            ClientConnectionSample('FC:C2:DE:53:BA:96', '-65dBm', '1M', '24M', '01:24:12')
+        ]
+        client_statuses = api.get_client_connection_statuses()
+        self.assertListEqual(client_statuses, expected)
+
+    @patch('requests.get')
+    def test_get_client_connection_statuses_no_clients(self, mock_get):
+        with open('wifimanager/test/test_res/client_connection_statuses_no_connections.html', 'rb') as fh:
+            html_content = fh.read()
+        mock_get.return_value.content = html_content
+        api = AsusApi()
+        client_statuses = api.get_client_connection_statuses()
+        self.assertListEqual(client_statuses, [])
+
 

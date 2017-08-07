@@ -51,7 +51,6 @@ class AsusApi:
             'Cookie': f'asus_token={self.asus_token}'
         }
         res = requests.get(url, headers=headers)
-        print(res.content.decode('utf-8'))
         return self.parse_client_connection_html(res.content.decode('utf-8'))
 
     def get_connected_clients(self):
@@ -205,6 +204,15 @@ class ClientConnectionSample:
 
     def __str__(self):
         return f'{self.mac_addr} (tx={self.tx_rate} rx={self.rx_rate})'
+
+    def __eq__(self, other):
+        return (
+            self.mac_addr == other.mac_addr and
+            self.rssi == other.rssi and
+            self.tx_rate == other.tx_rate and
+            self.rx_rate == other.rx_rate and
+            self.connection_time == other.connection_time
+        )
 
 
 class Client:
