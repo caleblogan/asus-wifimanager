@@ -12,7 +12,7 @@ class Client(models.Model):
         return f'{self.mac_addr} ({self.ip_addr})'
 
 
-class ConnectionSample(models.Model):
-    """Represents a clients connection info at a point in time"""
-    client = models.ForeignKey(Client, on_delete=models.CASCADE)
-    tx = models.
+# class ConnectionSample(models.Model):
+#     """Represents a clients connection info at a point in time"""
+#     client = models.ForeignKey(Client, on_delete=models.CASCADE)
+#     tx = models.
