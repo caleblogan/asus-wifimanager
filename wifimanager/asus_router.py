@@ -236,6 +236,8 @@ class ClientConnectionSample:
         stripped_sample = re.subn(' +', ' ', sample_text)[0].strip()
         if stripped_sample:
             mac, *_, rssi, __, tx, rx, connection_time = stripped_sample.split(' ')
+            tx = tx.replace('M', '')
+            rx = rx.replace('M', '')
             return ClientConnectionSample(mac, rssi, tx, rx, connection_time)
         return None
 
@@ -279,11 +281,15 @@ if __name__ == '__main__':
     asus = AsusApi()
 
     # asus.login()
-    asus.block_clients(['FC:C2:DE:53:BA:96'])
+    # asus.block_clients(['FC:C2:DE:53:BA:96'])
     # asus.unblock_all_clients()
     # print(asus.build_block_clients_data())
-    connected_clients = asus.get_connected_clients()
-    print('blocked:', [blocked_client for blocked_client in connected_clients if blocked_client.is_blocked])
-    for client in connected_clients:
-        print(client)
+    # connected_clients = asus.get_connected_clients()
+    # print('blocked:', [blocked_client for blocked_client in connected_clients if blocked_client.is_blocked])
+    # for client in connected_clients:
+    #     print(client)
+    asus.login()
+    statuses = asus.get_client_connection_statuses()
+    for status in statuses:
+        print(status)
 
