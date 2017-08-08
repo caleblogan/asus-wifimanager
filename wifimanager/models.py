@@ -12,7 +12,14 @@ class Client(models.Model):
         return f'{self.mac_addr} ({self.ip_addr})'
 
 
-# class ConnectionSample(models.Model):
-#     """Represents a clients connection info at a point in time"""
-#     client = models.ForeignKey(Client, on_delete=models.CASCADE)
-#     tx = models.
+class ConnectionSample(models.Model):
+    """Represents a clients connection info at a point in time"""
+    client = models.ForeignKey(Client, on_delete=models.CASCADE)
+    tx = models.FloatField()
+    rx = models.FloatField()
+    rssi = models.CharField('signal strength', max_length=15)
+    connection_time = models.DateTimeField()
+    time_of_sample = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'{self.client} (tx={self.tx} rx={self.rx} connection_time={self.connection_time})'
