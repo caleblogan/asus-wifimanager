@@ -13,9 +13,11 @@ from .models import Client, ConnectionSample
 
 
 def index(request):
+    remote_addr = request.META['REMOTE_ADDR']
+    user_ip_addr = '192.168.1.53' if remote_addr  == '192.168.1.192' else remote_addr
     context = {
         'clients': Client.get_currently_connnected_clients(),
-        'user_ip_addr': request.META['REMOTE_ADDR'],
+        'user_ip_addr': user_ip_addr,
     }
     return render(request, 'wifimanager/index.html', context=context)
 

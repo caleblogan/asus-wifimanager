@@ -2,8 +2,15 @@
 
 {% block content %}
 <header>
-    <h2>Wifi Manager</h2>
-    <hr/>
+    <div class="row">
+        <div class="col-md-8">
+            <h2>Wifi Manager </h2>
+        </div>
+        <div class="col-md-4">
+            <h5 class="text-right">user: {{ user_ip_addr }}</h5>
+        </div>
+        <hr/>
+    </div>
 </header>
 <div class="row"><div class="col-md-12">
     <form>
@@ -65,7 +72,7 @@
             clientnameElem = $(this).parent().children()[0]
             clientnameInputElem = clientnameElem.children[0]
 
-            newName = clientnameInputElem.getAttribute('value').trim()
+            newName = clientnameInputElem.value.trim()
             clientnameElem.innerHTML = newName
             console.log('new name:' + newName)
 

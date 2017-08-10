@@ -1,0 +1,21 @@
+.connection-bar {
+    width: 2px;
+    height: 16px;
+    background-color: #D9534F;
+    display: inline-block;
+    margin-left: 2px;
+}
+
+.client-li {
+    border-left: 3px solid #F0AD4E;
+    padding-left: 8px;
+}
+
+.user-client-li {
+    border-left: 6px solid #5CB85C;
+    padding-left: 11px;
+}
+
+#edit-client-name {
+    margin-top: 10px;
+}

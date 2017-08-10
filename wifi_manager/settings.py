@@ -30,7 +30,7 @@ else:
 
 
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '192.168.1.192']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '192.168.1.192', '192.168.1.53']
 
 
 # Application definition
