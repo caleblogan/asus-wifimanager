@@ -30,7 +30,12 @@
                     {% endif %}
                     <h5>({{client.mac_addr}} - {{client.ip_addr}})</h5>
                 </h3>
-                Rx: <span class="connection-bar"></span>
+                <p>Rx: <span class="connection-bar"></span></p>
+                {% if client.is_blocked %}
+                    <a href="{% url 'wifimanager:unblock-client' client.mac_addr %}"><button class="btn">unblock</button></a>
+                {% else %}
+                    <a href="{% url 'wifimanager:block-client' client.mac_addr %}"><button class="btn btn-default">block</button></a>
+                {% endif %}
             </div>
         </li>
     {% endfor %}

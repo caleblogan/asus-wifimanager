@@ -3,9 +3,10 @@ from .asus_router import AsusApi
 from django.db import models
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseRedirect
 from django.forms.models import model_to_dict
 from django.utils import timezone
+from django.core.urlresolvers import reverse
 
 import datetime
 
@@ -23,6 +24,38 @@ def index(request):
     }
     return render(request, 'wifimanager/index.html', context=context)
 
+
+def block_client(request, mac_addr):
+    try:
+        block_clients(mac_addr)
+    except Exception as e:
+        print(e)
+        pass
+    return HttpResponseRedirect(reverse('wifimanager:index'))
+
+
+def unblock_client(request, mac_addr):
+    try:
+        unblock_clients(mac_addr)
+    except Exception as e:
+        pass
+    return HttpResponseRedirect(reverse('wifimanager:index'))
+
+
+def block_clients(*new_macs_to_block):
+    clients_currently_blocked = Client.objects.filter(is_blocked=True)
+    all_macs_to_block = [client.mac_addr for client in clients_currently_blocked] + list(new_macs_to_block)
+    print('---------------macs to block:', all_macs_to_block)
+    api = AsusApi()
+    try:
+        api.block_clients(all_macs_to_block)
+    except Exception as e:
+        api.login()
+        api.block_clients(all_macs_to_block)
+
+
+def unblock_clients(*macs_to_unblock):
+    pass
 
 @csrf_exempt
 def update_client_name_alias(request):

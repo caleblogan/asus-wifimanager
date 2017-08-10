@@ -11,4 +11,6 @@ urlpatterns = [
     url(r'^remove_old_connection_samples/$', views.remove_old_connection_samples, name='remove-old-connection-samples'),
     url(r'^connection_samples/$', views.get_connection_samples, name='get-connection-samples'),
     url(r'^update_client_name_alias/$', views.update_client_name_alias, name='update-client-name-alias'),
+    url(r'^block_client/(?P<mac_addr>.+)$', views.block_client, name='block-client'),
+    url(r'^unblock_client/(?P<mac_addr>.+)$', views.unblock_client, name='unblock-client'),
 ]
