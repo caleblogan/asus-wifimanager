@@ -29,7 +29,6 @@ else:
     SECRET_KEY = os.environ['DJANGO_SECRETE_KEY']
 
 
-
 ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '192.168.1.192', '192.168.1.53']
 
 

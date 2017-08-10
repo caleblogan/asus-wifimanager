@@ -14,6 +14,8 @@ from .models import Client, ConnectionSample
 
 def index(request):
     remote_addr = request.META['REMOTE_ADDR']
+
+    # hack to get around my two wifi interfaces not working with ui quite right
     user_ip_addr = '192.168.1.53' if remote_addr  == '192.168.1.192' else remote_addr
     context = {
         'clients': Client.get_currently_connnected_clients(),
@@ -33,24 +35,6 @@ def update_client_name_alias(request):
         return JsonResponse({'success': True})
     except Exception as e:
         return JsonResponse({'error': e})
-
-
-def get_field(row, field):
-    """Gets the field of a queryobject by reference. Will get subfields as well eg. client.mac_addr or client"""
-    sub_fields = field.split('.')
-    for sub_field in sub_fields:
-        row = getattr(row, sub_field)
-    return row
-
-
-def group_by(field, query_set):
-    """Groups by a field eg. ConnectionSample.client. Returns a dict of field: [queryobjects...]"""
-    groups = {}
-    for row in query_set:
-        if get_field(row, field) not in groups:
-            groups[get_field(row, field)] = []
-        groups[get_field(row, field)].append(row)
-    return groups
 
 
 def get_connection_samples(request):
@@ -117,4 +101,24 @@ def remove_old_connection_samples(request):
         return JsonResponse({'samples_removed': deleted_samples[0]})
     except Exception as e:
         return JsonResponse({'error': 'failed to remove connection samples'})
+
+
+# ----------- Utils --------------
+
+def get_field(row, field):
+    """Gets the field of a queryobject by reference. Will get subfields as well eg. client.mac_addr or client"""
+    sub_fields = field.split('.')
+    for sub_field in sub_fields:
+        row = getattr(row, sub_field)
+    return row
+
+
+def group_by(field, query_set):
+    """Groups by a field eg. ConnectionSample.client. Returns a dict of field: [queryobjects...]"""
+    groups = {}
+    for row in query_set:
+        if get_field(row, field) not in groups:
+            groups[get_field(row, field)] = []
+        groups[get_field(row, field)].append(row)
+    return groups
 
