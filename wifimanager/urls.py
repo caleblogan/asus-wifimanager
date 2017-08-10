@@ -13,4 +13,6 @@ urlpatterns = [
     url(r'^update_client_name_alias/$', views.update_client_name_alias, name='update-client-name-alias'),
     url(r'^block_client/(?P<mac_addr>.+)$', views.block_client, name='block-client'),
     url(r'^unblock_client/(?P<mac_addr>.+)$', views.unblock_client, name='unblock-client'),
+    url(r'^block_all_clients/$', views.block_all_clients, name='block-all-clients'),
+    url(r'^unblock_all_clients/$', views.unblock_all_clients, name='unblock-all-clients'),
 ]

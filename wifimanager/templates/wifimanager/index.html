@@ -13,10 +13,9 @@
     </div>
 </header>
 <div class="row"><div class="col-md-12">
-    <form>
-        <button class="btn btn-primary" id="block-all-clients">Block All</button>
-        <button class="btn" id="unblock-all-clients">Unblock All</button>
-    </form>
+    <br/>
+    <a href="{% url 'wifimanager:block-all-clients' %}"><button class="btn btn-primary" id="block-all-clients">Block All</button></a>
+    <a href="{% url 'wifimanager:unblock-all-clients' %}"><button id="unblock-all-clients" class="btn">Unblock All</button></a>
     <ul class="list-unstyled">
     {% for client in clients %}
         <hr/>

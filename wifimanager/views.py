@@ -9,8 +9,11 @@ from django.utils import timezone
 from django.core.urlresolvers import reverse
 
 import datetime
+import logging
 
 from .models import Client, ConnectionSample
+
+logger = logging.getLogger(__name__)
 
 
 def index(request):
@@ -42,10 +45,28 @@ def unblock_client(request, mac_addr):
     return HttpResponseRedirect(reverse('wifimanager:index'))
 
 
+def block_all_clients(request):
+    try:
+        clients_not_blocked = Client.objects.filter(is_blocked=False)
+        block_clients(*[client.mac_addr for client in clients_not_blocked])
+    except Exception as e:
+        print(e)
+        pass
+    return HttpResponseRedirect(reverse('wifimanager:index'))
+
+
+def unblock_all_clients(request):
+    try:
+        api = AsusApi()
+        api.unblock_all_clients()
+    except Exception as e:
+        logger.debug(e)
+    return HttpResponseRedirect(reverse('wifimanager:index'))
+
+
 def block_clients(*new_macs_to_block):
     clients_currently_blocked = Client.objects.filter(is_blocked=True)
     all_macs_to_block = [client.mac_addr for client in clients_currently_blocked] + list(new_macs_to_block)
-    print('---------------macs to block:', all_macs_to_block)
     api = AsusApi()
     try:
         api.block_clients(all_macs_to_block)
@@ -55,7 +76,14 @@ def block_clients(*new_macs_to_block):
 
 
 def unblock_clients(*macs_to_unblock):
-    pass
+    clients_currently_blocked = Client.objects.filter(is_blocked=True)
+    all_macs_to_block = [client.mac_addr for client in clients_currently_blocked if client.mac_addr not in macs_to_unblock]
+    api = AsusApi()
+    try:
+        api.block_clients(all_macs_to_block)
+    except Exception as e:
+        api.login()
+        api.block_clients(all_macs_to_block)
 
 @csrf_exempt
 def update_client_name_alias(request):

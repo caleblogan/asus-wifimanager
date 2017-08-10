@@ -146,15 +146,11 @@ class AsusApi:
     def parse_blocked_macs(raw_clients_js):
         """Takes in a text blob of clients js and returns a list of blocked macs"""
         blocked_macs = []
-        print(raw_clients_js)
         for line in raw_clients_js.splitlines():
             if line.startswith('time_scheduling_mac'):
                 macs_match = re.search(r"\('(?P<macs>[A-Z0-9:>]{2,})'\)", line)
                 if macs_match:
                     blocked_macs = macs_match.group('macs').split('>')
-                    print('------------', blocked_macs)
-                else:
-                    print('--------no match')
         return blocked_macs
 
     def get_credentials_b64_encoded(self):
@@ -288,6 +284,7 @@ if __name__ == '__main__':
     # asus.block_clients(['FC:C2:DE:53:BA:96'])
     # asus.unblock_all_clients()
     # print(asus.build_block_clients_data())
+    asus.unblock_all_clients()
     connected_clients = asus.get_connected_clients()
     print('blocked:', [blocked_client for blocked_client in connected_clients if blocked_client.is_blocked])
     for client in connected_clients:
