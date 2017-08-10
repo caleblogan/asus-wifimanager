@@ -289,6 +289,7 @@ if __name__ == '__main__':
     # for client in connected_clients:
     #     print(client)
     asus.login()
+    # asus.unblock_all_clients()
     statuses = asus.get_client_connection_statuses()
     for status in statuses:
         print(status)

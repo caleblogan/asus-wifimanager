@@ -1,5 +1,97 @@
 {% extends 'wifimanager/base.html' %}
 
 {% block content %}
-boogla oogla
+<header>
+    <h2>Wifi Manager</h2>
+    <hr/>
+</header>
+<div class="row"><div class="col-md-12">
+    <form>
+        <button class="btn btn-primary" id="block-all-clients">Block All</button>
+        <button class="btn" id="unblock-all-clients">Unblock All</button>
+    </form>
+    <ul class="list-unstyled">
+    {% for client in clients %}
+        <hr/>
+
+        <li class="{% if client.ip_addr == user_ip_addr %}user-client-li{% else %}client-li{% endif %}" id="{{ client.mac_addr_safe }}">
+            <div>
+                <h3>
+                    <span class='client-name'>{% if client.name_alias %} {{client.name_alias}} {% else %} {{client.name}} {% endif %}</span>
+                    {% if client.ip_addr == user_ip_addr %}
+                        <button class="btn btn-small" id="edit-client-name" mac_addr="{{client.mac_addr_safe}}">edit</button>
+                    {% endif %}
+                    <h5>({{client.mac_addr}} - {{client.ip_addr}})</h5>
+                </h3>
+                Rx: <span class="connection-bar"></span>
+            </div>
+        </li>
+    {% endfor %}
+    </ul>
+</div></div>
+
+<script>
+    function updateRx() {
+        $.ajax({
+            url: "{% url 'wifimanager:get-connection-samples' %}?dt=.5",
+            context: document.body
+        }).done(function(data) {
+            let keys = Object.keys(data['client_samples'])
+            for (var i = 0; i < keys.length; ++i) {
+                let avg_rx = data['client_samples'][keys[i]].reduce((sum, val) => {
+                    return sum + Number(val['rx'])
+                }, 0) / data['client_samples'][keys[i]].length
+                $("#"+keys[i]+' .connection-bar').css('width', avg_rx)
+            }
+        });
+    }
+    window.setInterval(updateRx, 1300)
+
+    function saveClientName(mac_addr, newName) {
+        mac_addr = mac_addr.replace(/_/g, ':')
+        $.ajax({
+            type: 'POST',
+            url: "{% url 'wifimanager:update-client-name-alias' %}",
+            data: {'mac_addr': mac_addr, 'new_name_alias': newName},
+            context: document.body
+        }).done(function(data) {
+            console.log('updated client name')
+        });
+
+    }
+
+    function attatchSaveClientName() {
+        $('#edit-client-name').click(function(event) {
+            clientnameElem = $(this).parent().children()[0]
+            clientnameInputElem = clientnameElem.children[0]
+
+            newName = clientnameInputElem.getAttribute('value').trim()
+            clientnameElem.innerHTML = newName
+            console.log('new name:' + newName)
+
+            mac_addr = $(this).attr('mac_addr')
+            saveClientName(mac_addr, newName)
+
+            $(this).text('edit')
+            $(this).off('click')
+            attatchEditClientName()
+        })
+    }
+
+    function attatchEditClientName() {
+         $('#edit-client-name').click(function(event) {
+            clientnameElem = $(this).parent().children()[0]
+            curName = clientnameElem.textContent.trim()
+            clientnameElem.innerHTML = '<input class="form-control" type="text" value="' + curName + '"/>'
+            console.log(clientnameElem)
+            $(this).text('save')
+            $(this).off('click')
+            attatchSaveClientName()
+        })
+    }
+    attatchEditClientName()
+
+
+</script>
+
 {% endblock %}
